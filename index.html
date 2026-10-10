@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>E-CM | Ustensiles & Électroménager</title>
+<meta name="theme-color" content="#034B22">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="E-CM">
+<link id="manifest-link" rel="manifest">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        ecm: {
+          green: '#034B22', 'green-dark': '#023317', 'green-light': '#08582B',
+          'green-soft': '#E6F4EC', orange: '#FF5722', 'orange-hover': '#F24E1E',
+          bg: '#F5F7F6'
+        }
+      },
+      fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] }
+    }
+  }
+}
+</script>
+
+<style>
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.screen-fade { animation: fadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid #034B22; outline-offset: 2px;
+}
+body { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+#install-prompt {
+  position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+  z-index: 60; max-width: 340px; width: calc(100% - 32px);
+}
+#install-prompt.hidden { display: none !important; }
+</style>
+</head>
+<body class="h-full font-sans antialiased bg-slate-950 text-slate-800 flex justify-center items-center sm:py-4">
+
+<div id="install-prompt" class="hidden">
+  <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 flex items-center space-x-3">
+    <div class="w-10 h-10 rounded-xl bg-ecm-green flex items-center justify-center shrink-0">
+      <i data-lucide="download" class="w-5 h-5 text-white"></i>
+    </div>
+    <div class="flex-1 min-w-0">
+      <p class="text-xs font-extrabold text-slate-900">Installer E-CM</p>
+      <p class="text-[10px] text-slate-500 leading-snug">Ajouter sur l'écran d'accueil.</p>
+    </div>
+    <button id="install-btn" class="bg-ecm-orange text-white text-[11px] font-bold px-3 py-2 rounded-xl shrink-0">Installer</button>
+    <button id="install-close" class="text-slate-400 p-1 shrink-0"><i data-lucide="x" class="w-4 h-4"></i></button>
+  </div>
+</div>
+
+<div id="app" class="w-full max-w-md h-full sm:h-[852px] bg-ecm-bg sm:rounded-[44px] shadow-2xl flex flex-col overflow-hidden relative border-0 sm:border-[10px] sm:border-slate-800">
+
+<header class="bg-ecm-green text-white px-6 pt-3 pb-2 flex justify-between items-center text-xs font-semibold z-30 shrink-0">
+  <span id="current-time" class="font-bold tracking-tight">--:--</span>
+  <div class="flex items-center space-x-1.5 bg-black/20 px-2 py-0.5 rounded-full text-[10px] font-medium border border-white/10">
+    <i data-lucide="shield-check" class="w-3 h-3 text-emerald-400"></i><span>Issa Camara</span>
+  </div>
+  <div class="flex items-center space-x-1.5">
+    <i data-lucide="wifi" class="w-3.5 h-3.5"></i><i data-lucide="battery" class="w-4 h-4"></i>
+  </div>
+</header>
+
+<main id="main-content" class="flex-1 overflow-y-auto relative no-scrollbar pb-20"></main>
+
+<nav id="bottom-nav" class="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-200/80 px-2 py-2 flex justify-around items-center z-40 shadow-2xl">
+  <button onclick="navigateTo('home')" data-nav="home" class="nav-btn flex flex-col items-center py-1 px-3 rounded-xl text-ecm-green font-bold transition">
+    <i data-lucide="home" class="w-5 h-5"></i><span class="text-[10px] mt-0.5">Accueil</span>
+  </button>
+  <button onclick="navigateTo('catalog')" data-nav="catalog" class="nav-btn flex flex-col items-center py-1 px-3 rounded-xl text-slate-400 font-medium transition">
+    <i data-lucide="layout-grid" class="w-5 h-5"></i><span class="text-[10px] mt-0.5">Catalogue</span>
+  </button>
+  <button onclick="navigateTo('cart')" data-nav="cart" class="nav-btn flex flex-col items-center py-1 px-3 rounded-xl text-slate-400 font-medium transition relative">
+    <div class="relative">
+      <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+      <span id="cart-badge" class="absolute -top-1.5 -right-2.5 bg-ecm-orange text-white text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center hidden border-2 border-white">0</span>
+    </div>
+    <span class="text-[10px] mt-0.5">Panier</span>
+  </button>
+  <button onclick="navigateTo('account')" data-nav="account" class="nav-btn flex flex-col items-center py-1 px-3 rounded-xl text-slate-400 font-medium transition">
+    <i data-lucide="user" class="w-5 h-5"></i><span class="text-[10px] mt-0.5">Compte</span>
+  </button>
+</nav>
+
+<div id="toast" role="status" class="absolute top-14 left-1/2 -translate-x-1/2 bg-slate-900/95 text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-xl z-50 flex items-center space-x-2 transition-all duration-300 opacity-0 pointer-events-none transform -translate-y-4 border border-slate-700 max-w-[90%]">
+  <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+  <span id="toast-message">Notification</span>
+</div>
+
+<div id="admin-lock-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+  <div class="bg-white w-full max-w-xs rounded-3xl p-6 shadow-2xl text-center space-y-4 border border-slate-100 screen-fade relative">
+    <button onclick="closeAdminLockModal()" class="absolute top-4 right-4 text-slate-400"><i data-lucide="x" class="w-5 h-5"></i></button>
+    <div class="w-14 h-14 bg-ecm-green/10 text-ecm-green rounded-2xl flex items-center justify-center mx-auto border border-ecm-green/20">
+      <i data-lucide="lock" class="w-7 h-7"></i>
+    </div>
+    <div>
+      <h3 class="text-base font-extrabold text-slate-900">Accès Administrateur</h3>
+      <p class="text-[11px] text-slate-500 mt-1">Réservé à <span class="font-bold text-ecm-green">Issa Camara</span></p>
+    </div>
+    <form onsubmit="verifyAdminPin(event)" class="space-y-3 pt-2" autocomplete="off">
+      <div>
+        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Code PIN</label>
+        <input id="admin-pin-input" type="password" inputmode="numeric" maxlength="12" placeholder="• • • •" class="w-full text-center tracking-widest text-lg font-bold p-3 bg-slate-100 border border-slate-200 rounded-xl focus:outline-none focus:border-ecm-green">
+        <p id="pin-error" class="text-[10px] text-red-500 font-bold mt-1 hidden">Code PIN incorrect.</p>
+      </div>
+      <button type="submit" class="w-full bg-ecm-green text-white py-3 rounded-xl font-bold text-xs shadow-md">Déverrouiller</button>
+    </form>
+  </div>
+</div>
+
+</div>
+
+<script>
+/* ==================== MANIFEST PWA (inline) ==================== */
+(function() {
+  const iconSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#08582B"/><stop offset="1" stop-color="#023317"/></linearGradient></defs><rect width="512" height="512" rx="96" fill="url(#g)"/><circle cx="256" cy="240" r="110" fill="#FF5722"/><path d="M180 240 Q256 140 332 240 Q256 340 180 240Z" fill="#FFFFFF"/><text x="256" y="440" font-family="Arial,sans-serif" font-size="80" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="4">E-CM</text></svg>`;
+  const iconDataUri = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(iconSVG)));
+
+  // Icône dynamique dans le <head>
+  const favicon = document.createElement('link');
+  favicon.rel = 'icon'; favicon.type = 'image/svg+xml'; favicon.href = iconDataUri;
+  document.head.appendChild(favicon);
+  const appleIcon = document.createElement('link');
+  appleIcon.rel = 'apple-touch-icon'; appleIcon.href = iconDataUri;
+  document.head.appendChild(appleIcon);
+
+  // Manifest en Blob
+  const manifest = {
+    name: "E-CM | Ustensiles & Électroménager",
+    short_name: "E-CM",
+    description: "Ustensiles de cuisine et électroménager de qualité à Ouagadougou. Édité par Issa Camara.",
+    start_url: ".",
+    scope: ".",
+    display: "standalone",
+    orientation: "portrait",
+    background_color: "#034B22",
+    theme_color: "#034B22",
+    lang: "fr",
+    categories: ["shopping", "lifestyle"],
+    icons: [
+      { src: iconDataUri, sizes: "512x512", type: "image/svg+xml", purpose: "any" },
+      { src: iconDataUri, sizes: "512x512", type: "image/svg+xml", purpose: "maskable" }
+    ]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+  document.getElementById('manifest-link').href = URL.createObjectURL(blob);
+})();
+
+/* ==================== SERVICE WORKER (inline via Blob) ==================== */
+(function() {
+  const swCode = `
+    const CACHE = 'ecm-v1';
+    self.addEventListener('install', (e) => { self.skipWaiting(); });
+    self.addEventListener('activate', (e) => { e.waitUntil(self.clients.claim()); });
+    self.addEventListener('fetch', (e) => {
+      if (e.request.method !== 'GET') return;
+      e.respondWith(
+        caches.match(e.request).then(cached => {
+          const fetchPromise = fetch(e.request).then(res => {
+            if (res && res.status === 200 && (res.type === 'basic' || res.type === 'cors')) {
+              const clone = res.clone();
+              caches.open(CACHE).then(c => c.put(e.request, clone)).catch(() => {});
+            }
+            return res;
+          }).catch(() => cached);
+          return cached || fetchPromise;
+        })
+      );
+    });
+  `;
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    const swBlob = new Blob([swCode], { type: 'application/javascript' });
+    const swUrl = URL.createObjectURL(swBlob);
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register(swUrl, { scope: './' }).catch(() => {});
+    });
+  }
+})();
+
+/* ==================== DONNÉES ==================== */
+const DEFAULT_PRODUCTS = [
+  { id:'prod-1', name:'Friteuse sans huile 8L', category:'Electromenager', price:69900, oldPrice:79900, badge:'En stock', image:'https://images.unsplash.com/photo-1626143509930-b18429ef994e?w=600&auto=format&fit=crop&q=80', rating:4.8, reviewsCount:128, description:"Profitez de repas sains avec cette friteuse sans huile 8L sélectionnée par Issa Camara.", specs:['Capacité: 8 Litres','Écran tactile LED','Température réglable','Minuterie intégrée'] },
+  { id:'prod-2', name:'Blender professionnel 2L', category:'Electromenager', price:39900, oldPrice:45000, badge:'Populaire', image:'https://images.unsplash.com/photo-1570222094114-d054a817e56b?w=600&auto=format&fit=crop&q=80', rating:4.7, reviewsCount:94, description:'Blender ultra puissant idéal pour smoothies et soupes.', specs:['Moteur 1800W','Bol 2L','6 Lames inox'] },
+  { id:'prod-3', name:'Set de casseroles inox 10 pcs', category:'Ustensiles', price:49900, oldPrice:58000, badge:'Bestseller', image:'https://images.unsplash.com/photo-1584992236310-6edddc08acff?w=600&auto=format&fit=crop&q=80', rating:4.9, reviewsCount:210, description:'Ensemble complet premium en acier inoxydable 18/10.', specs:['Inox haute qualité','Fond thermo-diffuseur','Couvercles verre trempé'] },
+  { id:'prod-4', name:'Bouilloire électrique 1.7L', category:'Petits appareils', price:12900, oldPrice:15000, badge:'Promo', image:'https://images.unsplash.com/photo-1594212699903-ec8a3eca50f6?w=600&auto=format&fit=crop&q=80', rating:4.5, reviewsCount:67, description:'Bouilloire rapide avec arrêt automatique.', specs:['Capacité 1.7L','Puissance 2200W','Socle 360°'] },
+  { id:'prod-5', name:'Micro-ondes 20L Numérique', category:'Electromenager', price:54900, oldPrice:62000, badge:'En stock', image:'https://images.unsplash.com/photo-1585659722983-3a675dabf23d?w=600&auto=format&fit=crop&q=80', rating:4.6, reviewsCount:82, description:'Micro-ondes moderne avec programmes automatiques.', specs:['Capacité 20L','700W','8 programmes'] },
+  { id:'prod-6', name:'Set de couteaux 6 pcs', category:'Ustensiles', price:19900, oldPrice:24000, badge:'Top Qualité', image:'https://images.unsplash.com/photo-1593618998160-e34014e67546?w=600&auto=format&fit=crop&q=80', rating:4.8, reviewsCount:115, description:'Bloc de couteaux professionnels affûtés.', specs:['Acier inox','Bloc bois','Ciseaux inclus'] }
+];
+const FALLBACK_IMG = 'https://placehold.co/400x400/034B22/FFFFFF?text=E-CM';
+const ADMIN_PIN_HASHES = ['03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4'];
+const ADMIN_SESSION_MS = 15 * 60 * 1000;
+const STORAGE_KEYS = { products:'ecm_products_v2', cart:'ecm_cart_v2', favorites:'ecm_favorites_v2', orders:'ecm_orders_v2', onboarded:'ecm_onboarded_v2' };
+
+let products = loadJSON(STORAGE_KEYS.products, DEFAULT_PRODUCTS);
+let cart = loadJSON(STORAGE_KEYS.cart, []);
+let favorites = loadJSON(STORAGE_KEYS.favorites, ['prod-1','prod-3']);
+let orders = loadJSON(STORAGE_KEYS.orders, []);
+let isAdminUnlocked = false, adminUnlockedAt = 0, editingProductId = null;
+let activeTab = 'home', selectedCategory = 'Tous', searchQuery = '', searchDebounceTimer = null;
+let activeProductDetail = null, activeOrderId = null, currentDetailQty = 1;
+let selectedShipping = 2000, selectedPayment = 'Orange Money';
+
+function loadJSON(k, f) { try { const r = localStorage.getItem(k); if (!r) return f; const p = JSON.parse(r); return Array.isArray(p) ? p : f; } catch { return f; } }
+function saveData() { try { localStorage.setItem(STORAGE_KEYS.products, JSON.stringify(products)); localStorage.setItem(STORAGE_KEYS.cart, JSON.stringify(cart)); localStorage.setItem(STORAGE_KEYS.favorites, JSON.stringify(favorites)); localStorage.setItem(STORAGE_KEYS.orders, JSON.stringify(orders)); } catch(e){} updateCartBadge(); }
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+function normalize(s) { return String(s ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+function formatPrice(a) { const n = Number(a) || 0; return new Intl.NumberFormat('fr-FR').format(n) + ' F CFA'; }
+function safeNumber(v) { const n = Number(v); return Number.isFinite(n) && n >= 0 ? n : 0; }
+function pct(p) { return p.oldPrice && p.oldPrice > p.price ? Math.round((1 - p.price / p.oldPrice) * 100) : 0; }
+async function sha256(t) { if (!window.crypto || !window.crypto.subtle) { let h = 0; for (let i=0;i<t.length;i++) h = ((h<<5)-h+t.charCodeAt(i))|0; return 'fallback_'+h; } const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)); return Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2,'0')).join(''); }
+function showToast(m) { const t = document.getElementById('toast'); if (!t) return; document.getElementById('toast-message').textContent = m; t.classList.remove('opacity-0','-translate-y-4','pointer-events-none'); t.classList.add('opacity-100','translate-y-0'); clearTimeout(showToast._t); showToast._t = setTimeout(() => { t.classList.add('opacity-0','-translate-y-4','pointer-events-none'); t.classList.remove('opacity-100','translate-y-0'); }, 2600); }
+function updateCartBadge() { const b = document.getElementById('cart-badge'); if (!b) return; const c = cart.reduce((a,i) => a + i.qty, 0); if (c > 0) { b.textContent = c; b.classList.remove('hidden'); } else b.classList.add('hidden'); }
+function updateTime() { const e = document.getElementById('current-time'); if (e) e.textContent = new Date().toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' }); }
+function getFiltered() { return products.filter(p => { const ok = selectedCategory === 'Tous' || p.category === selectedCategory; if (!ok) return false; if (!searchQuery) return true; const q = normalize(searchQuery); return normalize(p.name).includes(q) || normalize(p.category).includes(q); }); }
+function checkAdminSession() { if (!isAdminUnlocked) return false; if (Date.now() - adminUnlockedAt > ADMIN_SESSION_MS) { isAdminUnlocked = false; adminUnlockedAt = 0; return false; } return true; }
+
+function navigateTo(tab, extra = null) {
+  if (tab === 'admin' && !checkAdminSession()) { openAdminLockModal(); return; }
+  activeTab = tab;
+  const main = document.getElementById('main-content'), nav = document.getElementById('bottom-nav');
+  document.querySelectorAll('.nav-btn').forEach(b => { b.classList.remove('text-ecm-green','font-bold'); b.classList.add('text-slate-400','font-medium'); });
+  const cur = document.querySelector(`.nav-btn[data-nav="${tab}"]`);
+  if (cur) { cur.classList.remove('text-slate-400','font-medium'); cur.classList.add('text-ecm-green','font-bold'); }
+  if (['splash','onboarding','checkout-step1','checkout-step2','order-success'].includes(tab)) nav.classList.add('hidden'); else nav.classList.remove('hidden');
+  switch (tab) {
+    case 'splash': renderSplash(); break;
+    case 'onboarding': renderOnboarding(); break;
+    case 'home': renderHome(); break;
+    case 'catalog': renderCatalog(); break;
+    case 'product-detail': currentDetailQty = 1; if (extra) activeProductDetail = extra; if (!activeProductDetail) { navigateTo('home'); return; } renderDetail(activeProductDetail); break;
+    case 'cart': renderCart(); break;
+    case 'checkout-step1': renderCheckout1(); break;
+    case 'checkout-step2': renderCheckout2(); break;
+    case 'order-success': renderSuccess(extra); break;
+    case 'order-tracking': activeOrderId = extra || activeOrderId; renderTracking(activeOrderId); break;
+    case 'orders': renderOrders(); break;
+    case 'account': renderAccount(); break;
+    case 'favorites': renderFavorites(); break;
+    case 'notifications': renderNotifications(); break;
+    case 'contact': renderContact(); break;
+    case 'admin': renderAdmin(); break;
+    default: renderHome();
+  }
+  if (window.lucide) lucide.createIcons();
+  if (main) main.scrollTop = 0;
+}
+
+function openAdminLockModal() { if (checkAdminSession()) { navigateTo('admin'); return; } const m = document.getElementById('admin-lock-modal'); m.classList.remove('hidden'); const i = document.getElementById('admin-pin-input'); i.value = ''; document.getElementById('pin-error').classList.add('hidden'); setTimeout(() => i.focus(), 50); }
+function closeAdminLockModal() { document.getElementById('admin-lock-modal').classList.add('hidden'); }
+async function verifyAdminPin(e) { e.preventDefault(); const i = document.getElementById('admin-pin-input'); const p = i.value.trim(); const err = document.getElementById('pin-error'); if (!p) { err.classList.remove('hidden'); return; } const h = await sha256(p); if (ADMIN_PIN_HASHES.includes(h)) { isAdminUnlocked = true; adminUnlockedAt = Date.now(); closeAdminLockModal(); showToast('Session Administrateur active'); navigateTo('admin'); } else { err.classList.remove('hidden'); i.value = ''; i.focus(); } }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { const m = document.getElementById('admin-lock-modal'); if (m && !m.classList.contains('hidden')) closeAdminLockModal(); } });
+
+function renderSplash() { document.getElementById('main-content').innerHTML = `
+  <div class="h-full bg-gradient-to-b from-ecm-green-dark via-ecm-green to-ecm-green text-white p-6 flex flex-col justify-between items-center text-center screen-fade">
+    <div class="pt-10">
+      <div class="w-20 h-20 bg-ecm-orange rounded-3xl flex items-center justify-center mx-auto shadow-2xl mb-4 border-2 border-white/20"><i data-lucide="shopping-cart" class="w-10 h-10 text-white"></i></div>
+      <h1 class="text-3xl font-black">E-CM</h1>
+      <p class="text-[11px] text-emerald-200 uppercase tracking-widest font-extrabold mt-1">Ustensiles de cuisine & Électroménager</p>
+      <span class="inline-block mt-3 bg-white/10 px-3 py-1 rounded-full text-[10px] text-emerald-100 font-semibold border border-white/15">Édité par Issa Camara</span>
+    </div>
+    <div class="my-auto space-y-4">
+      <h2 class="text-xl font-extrabold leading-snug px-4">Tout pour votre cuisine et votre maison</h2>
+      <div class="grid grid-cols-2 gap-3 max-w-xs mx-auto pt-2">
+        <img src="https://images.unsplash.com/photo-1626143509930-b18429ef994e?w=300&auto=format&fit=crop&q=80" onerror="this.src='${FALLBACK_IMG}'" class="rounded-2xl shadow-lg h-28 w-full object-cover border border-white/20">
+        <img src="https://images.unsplash.com/photo-1584992236310-6edddc08acff?w=300&auto=format&fit=crop&q=80" onerror="this.src='${FALLBACK_IMG}'" class="rounded-2xl shadow-lg h-28 w-full object-cover border border-white/20">
+      </div>
+    </div>
+    <div class="w-full pb-4"><button onclick="navigateTo('onboarding')" class="w-full bg-ecm-orange text-white py-4 rounded-2xl font-bold shadow-xl flex items-center justify-center space-x-2"><span>Découvrir l'application</span><i data-lucide="arrow-right" class="w-5 h-5"></i></button></div>
+  </div>`; }
+
+function renderOnboarding() { document.getElementById('main-content').innerHTML = `
+  <div class="h-full bg-white p-6 flex flex-col justify-between items-center text-center screen-fade">
+    <div class="pt-4 w-full flex justify-between items-center">
+      <div class="flex items-center space-x-2"><div class="w-8 h-8 bg-ecm-orange rounded-xl flex items-center justify-center"><i data-lucide="shopping-cart" class="w-4 h-4 text-white"></i></div><span class="font-extrabold text-ecm-green">E-CM</span></div>
+      <button onclick="finishOnboarding()" class="text-xs text-slate-400 font-bold uppercase">Passer</button>
+    </div>
+    <div class="my-auto space-y-4">
+      <img src="https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=600&auto=format&fit=crop&q=80" onerror="this.src='${FALLBACK_IMG}'" class="rounded-3xl shadow-xl w-full max-w-xs h-60 object-cover mx-auto">
+      <h2 class="text-2xl font-black text-slate-900 pt-4">Bienvenue sur E-CM</h2>
+      <p class="text-xs text-slate-500 leading-relaxed px-4">La référence des ustensiles et de l'électroménager à Ouagadougou. Fondé par <span class="font-bold text-ecm-green">Issa Camara</span>.</p>
+    </div>
+    <div class="w-full space-y-2.5 pb-2">
+      <button onclick="finishOnboarding()" class="w-full bg-ecm-orange text-white py-3.5 rounded-2xl font-bold text-xs shadow-lg">Commencer</button>
+      <button onclick="navigateTo('account')" class="w-full bg-slate-100 text-slate-700 py-3 rounded-2xl font-semibold text-xs">Mon profil</button>
+    </div>
+  </div>`; }
+
+function finishOnboarding() { try { localStorage.setItem(STORAGE_KEYS.onboarded, '1'); } catch {} navigateTo('home'); }
+
+function renderHome() { const f = getFiltered(); document.getElementById('main-content').innerHTML = `
+  <div class="p-4 space-y-4 screen-fade">
+    <div class="flex items-center justify-between pt-1">
+      <div class="flex items-center space-x-2.5">
+        <div class="w-10 h-10 bg-ecm-orange rounded-2xl flex items-center justify-center shadow-lg"><i data-lucide="shopping-bag" class="w-5 h-5 text-white"></i></div>
+        <div><h1 class="font-black text-ecm-green text-xl leading-none">E-CM</h1><p class="text-[10px] text-slate-500 font-semibold mt-0.5">Ustensiles & Électroménager</p></div>
+      </div>
+      <button onclick="openAdminLockModal()" class="bg-slate-100 text-slate-700 p-2 rounded-xl text-xs font-bold flex items-center space-x-1.5 border border-slate-200">
+        <i data-lucide="shield-lock" class="w-4 h-4 text-ecm-green"></i><span class="text-[11px]">Admin</span>
+      </button>
+    </div>
+    <div class="relative">
+      <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+      <input type="search" id="home-search" placeholder="Rechercher..." value="${esc(searchQuery)}" oninput="onSearchInput(this.value)" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-xs font-medium focus:outline-none focus:border-ecm-green shadow-sm">
+    </div>
+    <div class="bg-gradient-to-br from-ecm-green via-ecm-green-light to-emerald-900 rounded-3xl p-4 text-white shadow-xl flex justify-between items-center">
+      <div class="space-y-2 z-10 max-w-[62%]">
+        <span class="bg-ecm-orange text-[9px] font-black px-2 py-0.5 rounded-md uppercase">Qualité Garantie</span>
+        <h2 class="text-base font-extrabold leading-tight">Votre cuisine, notre passion !</h2>
+        <button onclick="navigateTo('catalog')" class="mt-1 bg-ecm-orange text-white text-[11px] font-bold px-3.5 py-1.5 rounded-xl">Découvrir</button>
+      </div>
+      <img src="https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=300&auto=format&fit=crop&q=80" onerror="this.src='${FALLBACK_IMG}'" class="w-28 h-28 object-cover rounded-2xl shadow-xl border-2 border-white/20 transform rotate-3 shrink-0">
+    </div>
+    <div class="space-y-2">
+      <h3 class="text-xs font-extrabold text-slate-900 uppercase">Catégories</h3>
+      <div class="flex space-x-2 overflow-x-auto no-scrollbar py-1">
+        ${['Tous','Ustensiles','Electromenager','Petits appareils'].map(c => `<button onclick="setCategory('${c}')" class="px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap ${selectedCategory===c ? 'bg-ecm-green text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200'}">${esc(c)}</button>`).join('')}
+      </div>
+    </div>
+    <div id="home-products-section" class="space-y-2">${renderHomeSection(f)}</div>
+  </div>`; }
+
+function renderHomeSection(f) { return `
+  <div class="flex justify-between items-center"><h3 class="text-xs font-extrabold text-slate-900 uppercase">Produits populaires</h3><span class="text-[11px] text-slate-400 font-semibold">${f.length} article(s)</span></div>
+  <div class="grid grid-cols-2 gap-3 mt-2">${f.length === 0 ? `<div class="col-span-2 py-8 text-center text-xs text-slate-400">Aucun produit trouvé</div>` : f.map(renderCard).join('')}</div>`; }
+
+function onSearchInput(v) { searchQuery = v; clearTimeout(searchDebounceTimer); searchDebounceTimer = setTimeout(() => { if (activeTab === 'home') { const s = document.getElementById('home-products-section'); if (s) { s.innerHTML = renderHomeSection(getFiltered()); if (window.lucide) lucide.createIcons(); } } else if (activeTab === 'catalog') { const g = document.getElementById('catalog-groups'); if (g) { g.innerHTML = renderCatalogGroups(); if (window.lucide) lucide.createIcons(); } } }, 150); }
+
+function setCategory(c) { selectedCategory = c; if (activeTab === 'home') { const s = document.getElementById('home-products-section'); if (s) { s.innerHTML = renderHomeSection(getFiltered()); if (window.lucide) lucide.createIcons(); } } else if (activeTab === 'catalog') { renderCatalog(); if (window.lucide) lucide.createIcons(); } }
+
+function renderCatalog() { document.getElementById('main-content').innerHTML = `
+  <div class="p-4 space-y-4 screen-fade">
+    <div class="flex items-center justify-between pt-1">
+      <h1 class="text-lg font-extrabold text-slate-900">Catalogue</h1>
+      <button onclick="navigateTo('home')" class="p-1 text-slate-500"><i data-lucide="arrow-left" class="w-5 h-5"></i></button>
+    </div>
+    <div class="relative">
+      <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+      <input type="search" id="catalog-search" placeholder="Rechercher..." value="${esc(searchQuery)}" oninput="onSearchInput(this.value)" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-xs font-medium focus:outline-none focus:border-ecm-green shadow-sm">
+    </div>
+    <div class="flex space-x-2 overflow-x-auto no-scrollbar py-1">
+      ${['Tous','Ustensiles','Electromenager','Petits appareils'].map(c => `<button onclick="setCategory('${c}')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${selectedCategory===c ? 'bg-ecm-green text-white' : 'bg-white text-slate-600 border border-slate-200'}">${esc(c)}</button>`).join('')}
+    </div>
+    <div id="catalog-groups" class="space-y-4">${renderCatalogGroups()}</div>
+  </div>`; }
+
+function renderCatalogGroups() { let h = ''; ['Ustensiles','Electromenager','Petits appareils'].forEach(cat => { if (selectedCategory !== 'Tous' && selectedCategory !== cat) return; const items = products.filter(p => { if (p.category !== cat) return false; if (!searchQuery) return true; const q = normalize(searchQuery); return normalize(p.name).includes(q) || normalize(p.category).includes(q); }); if (!items.length) return; h += `<div class="space-y-2 pt-2"><div class="flex justify-between items-center"><h2 class="text-xs font-black text-ecm-green uppercase">${esc(cat)}</h2><span class="text-[10px] text-slate-400">${items.length} disponible(s)</span></div><div class="grid grid-cols-2 gap-3">${items.map(renderCard).join('')}</div></div>`; }); return h || `<div class="py-10 text-center text-xs text-slate-400">Aucun produit.</div>`; }
+
+function renderCard(p) { const isFav = favorites.includes(p.id); const d = pct(p); return `
+  <div class="bg-white rounded-2xl p-2.5 shadow-sm border border-slate-100 flex flex-col justify-between relative hover:shadow-md transition">
+    <button onclick="event.stopPropagation(); toggleFavorite('${esc(p.id)}')" class="absolute top-4 right-4 z-10 w-7 h-7 rounded-full bg-white/90 flex items-center justify-center shadow-sm text-slate-400 hover:text-red-500">
+      <i data-lucide="heart" class="w-4 h-4 ${isFav ? 'fill-red-500 text-red-500' : ''}"></i>
+    </button>
+    <div onclick="navigateTo('product-detail', '${esc(p.id)}')" class="cursor-pointer space-y-2">
+      <div class="h-32 w-full bg-slate-50 rounded-xl overflow-hidden relative border border-slate-100">
+        <img src="${esc(p.image)}" onerror="this.src='${FALLBACK_IMG}'" alt="${esc(p.name)}" class="w-full h-full object-cover" loading="lazy">
+        ${p.badge ? `<span class="absolute bottom-2 left-2 bg-slate-900/80 text-white text-[9px] font-extrabold px-2 py-0.5 rounded-md">${esc(p.badge)}</span>` : ''}
+        ${d > 0 ? `<span class="absolute top-2 left-2 bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-md">-${d}%</span>` : ''}
+      </div>
+      <div><h4 class="text-xs font-bold text-slate-800 line-clamp-1">${esc(p.name)}</h4><p class="text-[10px] text-slate-400 mt-0.5 font-medium">${esc(p.category)}</p></div>
+    </div>
+    <div class="flex items-center justify-between pt-2 border-t border-slate-50 mt-2">
+      <div><p class="text-xs font-black text-ecm-green">${formatPrice(p.price)}</p>${p.oldPrice && p.oldPrice > p.price ? `<p class="text-[9px] text-slate-400 line-through">${formatPrice(p.oldPrice)}</p>` : ''}</div>
+      <button onclick="event.stopPropagation(); addToCart('${esc(p.id)}', 1)" class="w-7 h-7 bg-ecm-green text-white rounded-lg flex items-center justify-center shadow-sm"><i data-lucide="shopping-bag" class="w-3.5 h-3.5"></i></button>
+    </div>
+  </div>`; }
+
+function renderDetail(id) { const p = products.find(x => x.id === id); if (!p) { document.getElementById('main-content').innerHTML = `<div class="p-8 text-center"><p class="text-sm font-bold">Produit introuvable</p><button onclick="navigateTo('home')" class="mt-3 bg-ecm-green text-white text-xs font-bold px-5 py-2.5 rounded-xl">Retour</button></div>`; return; } const isFav = favorites.includes(p.id); const d = pct(p); const badge = p.badge || (p.oldPrice ? 'Promo' : 'En stock'); document.getElementById('main-content').innerHTML = `
+  <div class="space-y-4 pb-6 screen-fade">
+    <div class="p-4 flex items-center justify-between bg-white border-b border-slate-100">
+      <button onclick="navigateTo('home')" class="p-1 text-slate-600"><i data-lucide="arrow-left" class="w-5 h-5"></i></button>
+      <h1 class="text-xs font-extrabold text-slate-800 truncate max-w-[200px]">${esc(p.name)}</h1>
+      <button id="fav-btn-detail" onclick="toggleFavorite('${esc(p.id)}')" class="p-1 text-slate-600"><i data-lucide="heart" class="w-5 h-5 ${isFav ? 'fill-red-500 text-red-500' : ''}"></i></button>
+    </div>
+    <div class="px-4">
+      <div class="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 relative h-64">
+        <img src="${esc(p.image)}" onerror="this.src='${FALLBACK_IMG}'" class="w-full h-full object-cover">
+        <span class="absolute top-3 right-3 bg-emerald-500/90 text-white text-[10px] font-extrabold px-3 py-1 rounded-full">${esc(badge)}</span>
+        ${d > 0 ? `<span class="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-black px-2 py-1 rounded-full">-${d}%</span>` : ''}
+      </div>
+    </div>
+    <div class="px-4 space-y-3">
+      <div><h2 class="text-lg font-black text-slate-900">${esc(p.name)}</h2><div class="flex items-center space-x-2 mt-1"><i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400 text-amber-400"></i><span class="text-xs font-bold">${p.rating || 4.8}</span><span class="text-slate-300">•</span><span class="text-xs text-slate-400">(${p.reviewsCount || 0} avis)</span></div></div>
+      <div class="bg-ecm-green-soft p-3.5 rounded-2xl border border-emerald-200/60 flex items-center justify-between">
+        <div><p class="text-[9px] text-ecm-green font-extrabold uppercase">Prix E-CM</p><p class="text-xl font-black text-ecm-green">${formatPrice(p.price)}</p></div>
+        ${p.oldPrice && p.oldPrice > p.price ? `<span class="text-xs text-slate-400 line-through">${formatPrice(p.oldPrice)}</span>` : ''}
+      </div>
+      <div><h3 class="text-xs font-extrabold text-slate-800 uppercase">Description</h3><p class="text-xs text-slate-600 leading-relaxed">${esc(p.description || '')}</p></div>
+      <div><h3 class="text-xs font-extrabold text-slate-800 uppercase mb-1">Spécifications</h3><ul class="space-y-1.5">${(p.specs || []).map(s => `<li class="flex items-center text-xs text-slate-600 space-x-2"><i data-lucide="check-circle" class="w-3.5 h-3.5 text-ecm-green"></i><span>${esc(s)}</span></li>`).join('')}</ul></div>
+      <div class="pt-4 flex items-center space-x-3">
+        <div class="flex items-center bg-slate-100 rounded-2xl p-1 border border-slate-200">
+          <button onclick="adjustDetailQty(-1)" class="w-8 h-8 rounded-xl bg-white font-bold">-</button>
+          <span id="detail-qty" class="w-8 text-center text-xs font-extrabold">${currentDetailQty}</span>
+          <button onclick="adjustDetailQty(1)" class="w-8 h-8 rounded-xl bg-white font-bold">+</button>
+        </div>
+        <button onclick="addDetailToCart('${esc(p.id)}')" class="flex-1 bg-ecm-green text-white py-3.5 rounded-2xl font-bold text-xs shadow-lg flex items-center justify-center space-x-2"><i data-lucide="shopping-bag" class="w-4 h-4"></i><span>Ajouter</span></button>
+      </div>
+    </div>
+  </div>`; }
+
+function adjustDetailQty(d) { currentDetailQty = Math.max(1, Math.min(99, currentDetailQty + d)); const e = document.getElementById('detail-qty'); if (e) e.textContent = currentDetailQty; }
+function addDetailToCart(id) { addToCart(id, currentDetailQty); currentDetailQty = 1; }
+function addToCart(id, qty = 1) { const p = products.find(x => x.id === id); if (!p) return; const q = Math.max(1, Math.min(99, Math.floor(qty) || 1)); const ex = cart.find(x => x.id === id); if (ex) ex.qty = Math.min(99, ex.qty + q); else cart.push({ id:p.id, name:p.name, price:p.price, image:p.image, qty:q }); saveData(); showToast('Ajouté au panier !'); }
+function updateCartQty(id, d) { const it = cart.find(x => x.id === id); if (!it) return; it.qty += d; if (it.qty <= 0) cart = cart.filter(x => x.id !== id); if (it.qty > 99) it.qty = 99; saveData(); if (activeTab === 'cart') renderCart(); if (window.lucide) lucide.createIcons(); }
+function removeCartItem(id) { cart = cart.filter(x => x.id !== id); saveData(); if (activeTab === 'cart') renderCart(); if (window.lucide) lucide.createIcons(); }
+function toggleFavorite(id) { if (favorites.includes(id)) { favorites = favorites.filter(x => x !== id); showToast('Retiré des favoris'); } else { favorites.push(id); showToast('Ajouté aux favoris !'); } saveData(); const fb = document.getElementById('fav-btn-detail'); if (activeTab === 'product-detail' && fb) { const isFav = favorites.includes(id); fb.innerHTML = `<i data-lucide="heart" class="w-5 h-5 ${isFav ? 'fill-red-500 text-red-500' : ''}"></i>`; if (window.lucide) lucide.createIcons(); return; } if (activeTab === 'favorites') renderFavorites(); else if (activeTab === 'home') { const s = document.getElementById('home-products-section'); if (s) { s.innerHTML = renderHomeSection(getFiltered()); if (window.lucide) lucide.createIcons(); } } else if (activeTab === 'catalog') { const g = document.getElementById('catalog-groups'); if (g) { g.innerHTML = renderCatalogGroups(); if (window.lucide) lucide.createIcons(); } } if (window.lucide) lucide.createIcons(); }
+
+function renderCart() { const sub = cart.reduce((s,i) => s + i.price * i.qty, 0); const sh = cart.length ? selectedShipping : 0; const tot = sub + sh; document.getElementById('main-content').innerHTML = `
+  <div class="p-4 space-y-4 screen-fade">
+    <div class="flex items-center justify-between pt-1"><h1 class="text-lg font-extrabold text-slate-900">Mon panier</h1>${cart.length ? `<button onclick="clearCart()" class="text-xs text-red-500 font-bold flex items-center space-x-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i>Vider</button>` : ''}</div>
+    ${cart.length === 0 ? `<div class="py-16 text-center space-y-3"><div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400"><i data-lucide="shopping-bag" class="w-8 h-8"></i></div><p class="text-sm font-bold text-slate-700">Votre panier est vide</p><button onclick="navigateTo('catalog')" class="mt-2 bg-ecm-green text-white text-xs font-bold px-5 py-2.5 rounded-xl">Parcourir</button></div>` : `
+      <div class="space-y-3">${cart.map(i => `
+        <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between space-x-3">
+          <img src="${esc(i.image)}" onerror="this.src='${FALLBACK_IMG}'" class="w-16 h-16 object-cover rounded-xl border border-slate-100 shrink-0">
+          <div class="flex-1 space-y-1">
+            <h4 class="text-xs font-bold text-slate-800 line-clamp-1">${esc(i.name)}</h4>
+            <p class="text-xs font-black text-ecm-green">${formatPrice(i.price)}</p>
+            <div class="flex items-center space-x-2 pt-1">
+              <button onclick="updateCartQty('${esc(i.id)}', -1)" class="w-6 h-6 bg-slate-100 rounded-md font-bold text-xs">−</button>
+              <span class="text-xs font-extrabold w-6 text-center">${i.qty}</span>
+              <button onclick="updateCartQty('${esc(i.id)}', 1)" class="w-6 h-6 bg-slate-100 rounded-md font-bold text-xs">+</button>
+            </div>
+          </div>
+          <button onclick="removeCartItem('${esc(i.id)}')" class="p-2 text-slate-300 hover:text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+        </div>`).join('')}
+      </div>
+      <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm space-y-2">
+        <div class="flex justify-between text-xs text-slate-500"><span>Sous-total</span><span class="font-bold text-slate-800">${formatPrice(sub)}</span></div>
+        <div class="flex justify-between text-xs text-slate-500"><span>Livraison</span><span class="font-bold text-slate-800">${sh > 0 ? formatPrice(sh) : 'Gratuit'}</span></div>
+        <div class="border-t border-slate-100 pt-2 flex justify-between text-sm font-black"><span>Total</span><span class="text-ecm-green">${formatPrice(tot)}</span></div>
+      </div>
+      <button onclick="navigateTo('checkout-step1')" class="w-full bg-ecm-green text-white py-3.5 rounded-2xl font-bold text-xs shadow-lg flex items-center justify-center space-x-2"><i data-lucide="lock" class="w-4 h-4"></i><span>Passer la commande</span></button>`}
+  </div>`; }
+
+function clearCart() { if (!confirm('Vider le panier ?')) return; cart = []; saveData(); renderCart(); if (window.lucide) lucide.createIcons(); }
+
+function renderCheckout1() { document.getElementById('main-content').innerHTML = `
+  <div class="p-4 space-y-4 screen-fade">
+    <div class="flex items-center space-x-3 pt-1"><button onclick="navigateTo('cart')" class="p-1 text-slate-600"><i data-lucide="arrow-left" class="w-5 h-5"></i></button><h1 class="text-base font-extrabold">Passer la commande</h1></div>
+    <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm space-y-2">
+      <h3 class="text-xs font-extrabold flex items-center space-x-1.5"><i data-lucide="map-pin" class="w-4 h-4 text-ecm-green"></i><span>Adresse de livraison</span></h3>
+      <div class="bg-slate-50 p-3 rounded-xl border text-xs"><p class="font-bold">Ouagadougou, Burkina Faso</p><p class="text-[10px] text-slate-400 mt-0.5">Livraison rapide disponible</p></div>
+    </div>
+    <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm space-y-3">
+      <h3 class="text-xs font-extrabold">Mode de livraison</h3>
+      <label class="flex items-center justify-between p-3 rounded-xl border-2 ${selectedShipping === 2000 ? 'border-ecm-green bg-emerald-50/20' : 'border-slate-200'} cursor-pointer">
+        <div class="flex items-center space-x-3"><input type="radio" name="ship" ${selectedShipping === 2000 ? 'checked' : ''} onchange="setShipping(2000)" class="accent-ecm-green"><div><p class="text-xs font-bold">Livraison à domicile</p><p class="text-[10px] text-slate-400">Sous 24h - 48h</p></div></div>
+        <span class="text-xs font-black text-ecm-green">2 000 F CFA</span>
+      </label>
+      <label class="flex items-center justify-between p-3 rounded-xl border-2 ${selectedShipping === 0 ? 'border-ecm-green bg-emerald-50/20' : 'border-slate-200'} cursor-pointer">
+        <div class="flex items-center space-x-3"><input type="radio" name="ship" ${selectedShipping === 0 ? 'checked' : ''} onchange="setShipping(0)" class="accent-ecm-green"><div><p class="text-xs font-bold">Retrait Magasin E-CM</p><p class="text-[10px] text-slate-400">Zone Commerciale</p></div></div>
+        <span class="text-xs font-bold text-emerald-600">Gratuit</span>
+      </label>
+    </div>
+    <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm space-y-3">
+      <h3 class="text-xs font-extrabold">Vos coordonnées</h3>
+      <div><label class="block text-[10px] text-slate-500 font-bold mb-1">Nom complet</label><input id="checkout-name" type="text" value="Client E-CM" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-ecm-green"></div>
+      <div><label class="block text-[10px] text-slate-500 font-bold mb-1">Téléphone</label><input id="checkout-phone" type="tel" value="+226 70 12 34 56" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-ecm-green"></div>
+      <p id="checkout-error" class="text-[10px] text-red-500 font-bold hidden">Veuillez renseigner vos coordonnées.</p>
+    </div>
+    <button onclick="goToCheckout2()" class="w-full bg-ecm-green text-white py-3.5 rounded-2xl font-bold text-xs shadow-lg flex items-center justify-center space-x-1"><span>Passer au paiement</span><i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+  </div>`; }
+
+function setShipping(a) { selectedShipping = safeNumber(a); renderCheckout1(); if (window.lucide) lucide.createIcons(); }
+function goToCheckout2() { const n = document.getElementById('checkout-name').value.trim(); const p = document.getElementById('checkout-phone').value.trim(); if (!n || !p) { document.getElementById('checkout-error').classList.remove('hidden'); return; } navigateTo('checkout-step2'); }
+
+function renderCheckout2() { const sub = cart.reduce((s,i) => s + i.price * i.qty, 0); const sh = selectedShipping; const tot = sub + sh; document.getElementById('main-content').innerHTML = `
+  <div class="p-4 space-y-4 screen-fade">
+    <div class="flex items-center space-x-3 pt-1"><button onclick="navigateTo('checkout-step1')" class="p-1 text-slate-600"><i data-lucide="arrow-left" class="w-5 h-5"></i></button><h1 class="text-base font-extrabold">Paiement sécurisé</h1></div>
+    <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm space-y-3">
+      <h3 class="text-xs font-extrabold">Moyen de paiement</h3>
+      ${[{n:'Orange Money',i:'smartphone',c:'bg-orange-500'},{n:'Moov Money',i:'smartphone',c:'bg-blue-600'},{n:'Carte bancaire',i:'credit-card',c:'bg-emerald-600'},{n:'Paiement à la livraison',i:'banknote',c:'bg-slate-700'}].map(m => `
+        <label onclick="setPayment('${m.n}')" class="flex items-center justify-between p-3 rounded-xl border-2 ${selectedPayment === m.n ? 'border-ecm-green bg-emerald-50/30' : 'border-slate-200'} cursor-pointer">
+          <div class="flex items-center space-x-3"><input type="radio" name="pay" ${selectedPayment === m.n ? 'checked' : ''} class="accent-ecm-green"><div class="w-7 h-7 rounded-lg ${m.c} text-white flex items-center justify-center"><i data-lucide="${m.i}" class="w-4 h-4"></i></div><span class="text-xs font-bold">${esc(m.n)}</span></div>
+        </label>`).join('')}
+    </div>
+    <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm space-y-2">
+      <h3 class="text-xs font-extrabold mb-2">Récapitulatif</h3>
+      <div class="flex justify-between text-xs text-slate-500"><span>Articles</span><span class="font-bold text-slate-800">${formatPrice(sub)}</span></div>
+      <div class="flex justify-between text-xs text-slate-500"><span>Livraison</span><span class="font-bold text-slate-800">${sh > 0 ? formatPrice(sh) : 'Gratuit'}</span></div>
+      <div class="border-t pt-2 flex justify-between text-sm font-black"><span>Total</span><span class="text-ecm-green">${formatPrice(tot)}</span></div>
+    </div>
+    <button onclick="processOrder()" class="w-full bg-ecm-green text-white py-3.5 rounded-2xl font-bold text-xs shadow-lg flex items-center justify-center space-x-2"><i data-lucide="check-circle-2" class="w-4 h-4"></i><span>Payer maintenant</span></button>
+  </div>`; }
+
+function setPayment(n) { selectedPayment = n; renderCheckout2(); if (window.lucide) lucide.createIcons(); }
+
+function processOrder() { if (!cart.length) { navigateTo('cart'); return; } const sub = cart.reduce((s,i) => s + i.price * i.qty, 0); const sh = selectedShipping; const tot = sub + sh; const now = new Date(); const num = 'E-CM' + now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') + String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0'); orders.unshift({ id:num, date:now.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) + ' - ' + now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}), status:'Commande confirmée', items:[...cart], subtotal:sub, shipping:sh, total:tot, address:'Ouagadougou, Burkina Faso', paymentMethod:selectedPayment }); cart = []; selectedShipping = 2000; saveData(); navigateTo('order-success', num); }
+
+function renderSuccess(id) { const o = orders.find(x => x.id === id) || orders[0]; if (!o) { navigateTo('home'); return; } document.getElementById('main-content').innerHTML = `
+  <div class="h-full bg-gradient-to-b from-ecm-green-dark via-ecm-green to-ecm-green text-white p-6 flex flex-col justify-between items-center text-center screen-fade">
+    <div class="pt-8 space-y-4">
+      <div class="w-20 h-20 bg-emerald-500/20 border-2 border-emerald-400 rounded-full flex items-center justify-center mx-auto shadow-2xl"><i data-lucide="check" class="w-10 h-10 text-emerald-400"></i></div>
+      <h1 class="text-2xl font-black">Commande confirmée !</h1>
+      <p class="text-xs text-emerald-100">Merci pour votre achat chez E-CM<br><span class="font-mono font-bold text-white text-sm">N° ${esc(o.id)}</span></p>
+    </div>
+    <div class="w-full space-y-2.5">
+      <button onclick="navigateTo('order-tracking', '${esc(o.id)}')" class="w-full bg-white text-ecm-green py-3.5 rounded-2xl font-bold text-xs shadow-lg">Suivre ma commande</button>
+      <button onclick="navigateTo('home')" class="w-full bg-white/10 text-white border border-white/20 py-3 rounded-2xl font-bold text-xs">Retour au catalogue</button>
+    </div>
+    <div class="pt-4 border-t border-white/10 w-full flex justify-around text-xs">
+      <a href="https://wa.me/22670123456" target="_blank" class="flex items-center space-x-1 text-emerald-200"><i data-lucide="message-circle" class="w-4 h-4 text-emerald-400"></i><span>WhatsApp</span></a>
+      <a href="tel:+22670123456" class="flex items-center space-x-1 text-emerald-200"><i data-lucide="phone" class="w-4 h-4 text-emerald-400"></i><span>Appel</span></a>
+    </div>
+  </div>`; }
+
+function renderTracking(id) { const o = orders.find(x => x.id === id) || orders[0]; if (!o) { showToast('Aucune commande'); navigateTo('account'); return; } document.getElementById('main-content').innerHTML = `
+  <div class="p-4 space-y-4 screen-fade">
+    <div class="flex items-center justify-between pt-1"><button onclick="navigateTo('orders')" class="p-1 text-slate-600"><i data-lucide="arrow-left" class="w-5 h-5"></i></button><h1 class="text-base font-extrabold">Suivi de la commande</h1><div></div></div>
+    <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex justify-between items-center">
+      <div><p class="text-[10px] text-slate-400 font-bold uppercase">Référence</p><p class="text-sm font-black font-mono text-ecm-green">${esc(o.id)}</p><p class="text-[10px] text-slate-400 mt-0.5">${esc(o.date)}</p></div>
+      <span class="bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-3 py-1 rounded-full">${esc(o.status)}</span>
+    </div>
+    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+      <h3 class="text-xs font-extrabold mb-4">Évolution</h3>
+      <div class="relative pl-6 space-y-6 border-l-2 border-emerald-500 ml-2">
+        ${['Commande enregistrée','En préparation','En cours de livraison','Livrée'].map((t, i) => `<div class="relative"><div class="absolute -left-[31px] top-0 w-4 h-4 rounded-full ${i < 2 ? 'bg-emerald-500' : 'bg-slate-200'} border-2 border-white shadow"></div><h4 class="text-xs font-bold ${i < 2 ? 'text-slate-800' : 'text-slate-400'}">${t}</h4></div>`).join('')}
+      </div>
+    </div>
+    <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm space-y-3">
+      <h3 class="text-xs font-extrabold">Détail du colis</h3>
+      ${o.items.map(i => `<div class="flex items-center justify-between text-xs"><div class="flex items-center space-x-2"><img src="${esc(i.image)}" onerror="this.src='${FALLBACK_IMG}'" class="w-10 h-10 object-cover rounded-lg border"><div><p class="font-bold text-slate-800 line-clamp-1">${esc(i.name)}</p><p class="text-[10px] text-slate-400">Qté: ${i.qty}</p></div></div><span class="font-extrabold text-ecm-green">${formatPrice(i.price * i.qty)}</span></div>`).join('')}
+      <div class="border-t pt-2 flex justify-between text-xs font-black"><span>Total</span><span class="text-ecm-green">${formatPrice(o.total)}</span></div>
+    </div>
+  </div>`; }
+
+function renderOrders() { document.getElementById('main-content').innerHTML = `
+  <div class="p-4 space-y-4 screen-fade">
+    <div class="flex items-center space-x-3 pt-1"><button onclick="navigateTo('account')" class="p-1 text-slate-600"><i data-lucide="arrow-left" class="w-5 h-5"></i></button><h1 class="text-base font-extrabold">Mes commandes (${orders.length})</h1></div>
+    ${orders.length === 0 ? `<div class="py-16 text-center space-y-3"><i data-lucide="package" class="w-12 h-12 text-slate-300 mx-auto"></i><p class="text-sm font-bold text-slate-700">Aucune commande</p><button onclick="navigateTo('catalog')" class="mt-2 bg-ecm-green text-white text-xs font-bold px-5 py-2.5 rounded-xl">Parcourir</button></div>` : `
+      <div class="space-y-3">${orders.map(o => `
+        <button onclick="navigateTo('order-tracking', '${esc(o.id)}')" class="w-full text-left bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm">
+          <div class="flex justify-between"><div><p class="text-[10px] text-slate-400 font-bold uppercase">N°</p><p class="text-xs font-black font-mono text-ecm-green">${esc(o.id)}</p><p class="text-[10px] text-slate-400 mt-0.5">${esc(o.date)}</p></div><span class="bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full">${esc(o.status)}</span></div>
+          <div class="border-t mt-3 pt-3 flex justify-between"><span class="text-[11px] text-slate-500">${o.items.reduce((s,i) => s + i.qty, 0)} article(s)</span><span class="text-xs font-black text-ecm-green">${formatPrice(o.total)}</span></div>
+        </button>`).join('')}</div>`}
+  </div>`; }
+
+function renderAccount() { document.getElementById('main-content').innerHTML = `
+  <div class="p-4 space-y-4 screen-fade">
+    <h1 class="text-lg font-extrabold text-slate-900 pt-1">Mon compte</h1>
+    <div class="bg-gradient-to-r from-ecm-green via-ecm-green-light to-emerald-800 p-4 rounded-3xl text-white flex items-center space-x-3.5 shadow-md">
+      <div class="w-12 h-12 rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center text-base font-black">IC</div>
+      <div><h2 class="text-sm font-extrabold">Issa Camara</h2><p class="text-[10px] text-emerald-100">issacamara@gmail.com</p><p class="text-[9px] text-emerald-200 mt-0.5">Propriétaire exclusif d'E-CM</p></div>
+    </div>
+    <button onclick="openAdminLockModal()" class="w-full text-left bg-slate-900 text-white p-3.5 rounded-2xl flex items-center justify-between border border-slate-800">
+      <div class="flex items-center space-x-3"><div class="w-9 h-9 rounded-xl bg-ecm-orange flex items-center justify-center"><i data-lucide="shield-check" class="w-5 h-5"></i></div><div><p class="text-xs font-bold">Espace Admin</p><p class="text-[10px] text-slate-400">Réservé à Issa Camara</p></div></div>
+      <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+    </button>
+    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm divide-y text-xs font-bold text-slate-700">
+      ${[['orders','Mes commandes (' + orders.length + ')','package'],['favorites','Mes favoris (' + favorites.length + ')','heart'],['notifications','Notifications','bell'],['contact','Contact & Support','headphones']].map(x => `
+        <button onclick="navigateTo('${x[0]}')" class="w-full p-3.5 flex items-center justify-between hover:bg-slate-50"><div class="flex items-center space-x-3"><i data-lucide="${x[2]}" class="w-4 h-4 text-ecm-green"></i><span>${x[1]}</span></div><i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i></button>`).join('')}
+    </div>
+    <div class="p-3 bg-emerald-50/50 rounded-xl border border-emerald-100 text-center"><p class="text-[10px] text-emerald-800">E-CM est édité exclusivement par <strong>Issa Camara</strong>.</p></div>
+  </div>`; }
+
+function renderFavorites() { const fp = products.filter(p => favorites.includes(p.id)); document.getElementById('main-content').innerHTML = `
+  <div class="p-4 space-y-4 screen-fade">
+    <div class="flex items-center space-x-3 pt-1"><button onclick="navigateTo('account')" class="p-1 text-slate-600"><i data-lucide="arrow-left" class="w-5 h-5"></i></button><h1 class="text-base font-extrabold">Mes favoris</h1></div>
+    ${fp.length === 0 ? `<div class="py-16 text-center"><i data-lucide="heart-off" class="w-10 h-10 text-slate-300 mx-auto"></i><p class="text-xs font-bold text-slate-500 mt-2">Aucun favori</p></div>` : `<div class="grid grid-cols-2 gap-3">${fp.map(renderCard).join('')}</div>`}
+  </div>`; }
+
+function renderNotifications() { document.getElementById('main-content').innerHTML = `
+  <div class="p-4 space-y-4 screen-fade">
+    <div class="flex items-center space-x-3 pt-1"><button onclick="navigateTo('account')" class="p-1 text-slate-600"><i data-lucide="arrow-left" class="w-5 h-5"></i></button><h1 class="text-base font-extrabold">Notifications</h1></div>
+    <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex items-start space-x-3"><div class="w-8 h-8 rounded-xl bg-orange-100 text-ecm-orange flex items-center justify-center shrink-0"><i data-lucide="tag" class="w-4 h-4"></i></div><div><h4 class="text-xs font-bold">Promotion Cuisine</h4><p class="text-[11px] text-slate-500 mt-0.5">Réductions sur les appareils sélectionnés par Issa Camara.</p></div></div>
+    <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex items-start space-x-3"><div class="w-8 h-8 rounded-xl bg-emerald-100 text-ecm-green flex items-center justify-center shrink-0"><i data-lucide="package" class="w-4 h-4"></i></div><div><h4 class="text-xs font-bold">Suivi de commande</h4><p class="text-[11px] text-slate-500 mt-0.5">Vos commandes en cours sont visibles dans « Mes commandes ».</p></div></div>
+  </div>`; }
+
+function renderContact() { document.getElementById('main-content').innerHTML = `
+  <div class="p-4 space-y-4 screen-fade">
+    <div class="flex items-center space-x-3 pt-1"><button onclick="navigateTo('account')" class="p-1 text-slate-600"><i data-lucide="arrow-left" class="w-5 h-5"></i></button><h1 class="text-base font-extrabold">Nous contacter</h1></div>
+    <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm space-y-3">
+      <a href="https://wa.me/22670123456" target="_blank" class="flex items-center space-x-3 p-3 rounded-xl bg-emerald-50"><div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center"><i data-lucide="message-circle" class="w-5 h-5"></i></div><div><p class="text-xs font-bold">WhatsApp</p><p class="text-[10px] text-slate-500">+226 70 12 34 56</p></div></a>
+      <a href="tel:+22670123456" class="flex items-center space-x-3 p-3 rounded-xl bg-slate-50"><div class="w-10 h-10 rounded-xl bg-ecm-green text-white flex items-center justify-center"><i data-lucide="phone" class="w-5 h-5"></i></div><div><p class="text-xs font-bold">Téléphone</p><p class="text-[10px] text-slate-500">+226 70 12 34 56</p></div></a>
+      <div class="flex items-center space-x-3 p-3 rounded-xl bg-slate-50"><div class="w-10 h-10 rounded-xl bg-slate-800 text-white flex items-center justify-center"><i data-lucide="map-pin" class="w-5 h-5"></i></div><div><p class="text-xs font-bold">Siège E-CM</p><p class="text-[10px] text-slate-500">Ouagadougou</p></div></div>
+    </div>
+  </div>`; }
+
+function renderAdmin() { if (!checkAdminSession()) { openAdminLockModal(); return; } const rev = orders.reduce((s,o) => s + safeNumber(o.total), 0); const ed = editingProductId ? products.find(p => p.id === editingProductId) : null; document.getElementById('main-content').innerHTML = `
+  <div class="p-4 space-y-4 screen-fade">
+    <div class="flex items-center justify-between pt-1">
+      <div class="flex items-center space-x-2"><button onclick="navigateTo('home')" class="p-1 text-slate-600"><i data-lucide="arrow-left" class="w-5 h-5"></i></button><div><h1 class="text-base font-extrabold">Espace Admin</h1><p class="text-[10px] text-ecm-green font-bold">Issa Camara</p></div></div>
+      <button onclick="logoutAdmin()" class="bg-red-50 text-red-600 p-2 rounded-xl text-[10px] font-bold border border-red-200">Déco</button>
+    </div>
+    <div class="grid grid-cols-3 gap-2">
+      <div class="bg-white p-2.5 rounded-xl border shadow-sm text-center"><p class="text-[9px] text-slate-400 font-bold uppercase">Articles</p><p class="text-base font-black text-ecm-green">${products.length}</p></div>
+      <div class="bg-white p-2.5 rounded-xl border shadow-sm text-center"><p class="text-[9px] text-slate-400 font-bold uppercase">Ventes</p><p class="text-base font-black text-ecm-orange">${orders.length}</p></div>
+      <div class="bg-white p-2.5 rounded-xl border shadow-sm text-center"><p class="text-[9px] text-slate-400 font-bold uppercase">C.A.</p><p class="text-[10px] font-black text-slate-800 mt-1 truncate">${formatPrice(rev)}</p></div>
+    </div>
+    <div class="bg-white p-4 rounded-2xl border shadow-sm space-y-3">
+      <h3 class="text-xs font-extrabold border-b pb-2">${ed ? 'Modifier' : 'Ajouter'} un article</h3>
+      <form onsubmit="handleProductSubmit(event)" class="space-y-2.5 text-xs" autocomplete="off">
+        <input id="admin-name" type="text" required maxlength="100" placeholder="Nom du produit" value="${esc(ed?.name || '')}" class="w-full p-2.5 bg-slate-50 border rounded-xl focus:outline-none focus:border-ecm-green">
+        <div class="grid grid-cols-2 gap-2"><input id="admin-price" type="number" min="0" required placeholder="Prix" value="${ed?.price || ''}" class="w-full p-2.5 bg-slate-50 border rounded-xl"><input id="admin-old-price" type="number" min="0" placeholder="Ancien prix" value="${ed?.oldPrice || ''}" class="w-full p-2.5 bg-slate-50 border rounded-xl"></div>
+        <select id="admin-category" class="w-full p-2.5 bg-slate-50 border rounded-xl">${['Ustensiles','Electromenager','Petits appareils'].map(c => `<option value="${c}" ${ed?.category === c ? 'selected' : ''}>${c}</option>`).join('')}</select>
+        <input id="admin-image" type="url" required placeholder="URL photo" value="${esc(ed?.image || '')}" class="w-full p-2.5 bg-slate-50 border rounded-xl">
+        <textarea id="admin-description" rows="2" placeholder="Description" class="w-full p-2.5 bg-slate-50 border rounded-xl">${esc(ed?.description || '')}</textarea>
+        <button type="submit" class="w-full bg-ecm-orange text-white py-3 rounded-xl font-bold">${ed ? 'Mettre à jour' : 'Publier'}</button>
+      </form>
+    </div>
+    <div class="space-y-2">
+      <h3 class="text-xs font-extrabold">Articles (${products.length})</h3>
+      ${products.map(p => `<div class="bg-white p-3 rounded-2xl border flex items-center justify-between space-x-3"><img src="${esc(p.image)}" onerror="this.src='${FALLBACK_IMG}'" class="w-12 h-12 object-cover rounded-xl border"><div class="flex-1 min-w-0"><h4 class="text-xs font-bold truncate">${esc(p.name)}</h4><p class="text-xs font-black text-ecm-green">${formatPrice(p.price)}</p></div><div class="flex space-x-1"><button onclick="editProduct('${esc(p.id)}')" class="p-2 text-slate-600 bg-slate-50 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button><button onclick="deleteProduct('${esc(p.id)}')" class="p-2 text-slate-600 bg-slate-50 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div>`).join('')}
+    </div>
+  </div>`; }
+
+function logoutAdmin() { isAdminUnlocked = false; adminUnlockedAt = 0; showToast('Session fermée'); navigateTo('home'); }
+function handleProductSubmit(e) { e.preventDefault(); const n = document.getElementById('admin-name').value.trim(); const p = safeNumber(document.getElementById('admin-price').value); const o = document.getElementById('admin-old-price').value.trim(); const op = o ? safeNumber(o) : null; const c = document.getElementById('admin-category').value; const img = document.getElementById('admin-image').value.trim(); const d = document.getElementById('admin-description').value.trim() || 'Produit certifié E-CM.'; if (!n || p <= 0 || !img) { showToast('Champs invalides'); return; } if (editingProductId) { const i = products.findIndex(x => x.id === editingProductId); if (i !== -1) { products[i] = { ...products[i], name:n, price:p, oldPrice: op && op > p ? op : null, category:c, image:img, description:d }; showToast('Mis à jour'); } editingProductId = null; } else { products.unshift({ id:'prod-' + Date.now(), name:n, price:p, oldPrice: op && op > p ? op : null, category:c, image:img, badge:'Nouveau', rating:5, reviewsCount:1, description:d, specs:['Garantie E-CM','Produit Authentique'] }); showToast('Article ajouté !'); } saveData(); renderAdmin(); if (window.lucide) lucide.createIcons(); }
+function editProduct(id) { if (!products.some(p => p.id === id)) return; editingProductId = id; renderAdmin(); if (window.lucide) lucide.createIcons(); }
+function deleteProduct(id) { const p = products.find(x => x.id === id); if (!p) return; if (!confirm(`Supprimer « ${p.name} » ?`)) return; products = products.filter(x => x.id !== id); cart = cart.filter(x => x.id !== id); favorites = favorites.filter(x => x !== id); saveData(); showToast('Supprimé'); renderAdmin(); if (window.lucide) lucide.createIcons(); }
+
+/* ==================== INIT ==================== */
+window.onload = function() {
+  products = products.filter(p => p && p.id && p.name);
+  cart = cart.filter(i => i && i.id && products.some(p => p.id === i.id));
+  favorites = favorites.filter(id => products.some(p => p.id === id));
+  updateTime(); setInterval(updateTime, 30000); updateCartBadge();
+  let ob = false; try { ob = localStorage.getItem(STORAGE_KEYS.onboarded) === '1'; } catch {}
+  navigateTo(ob ? 'home' : 'splash');
+
+  let deferredPrompt = null;
+  const prompt = document.getElementById('install-prompt');
+  const btn = document.getElementById('install-btn');
+  const close = document.getElementById('install-close');
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (!localStorage.getItem('ecm_install_dismissed')) {
+      prompt.classList.remove('hidden');
+      if (window.lucide) lucide.createIcons();
+    }
+  });
+
+  btn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') showToast('Installation lancée !');
+    deferredPrompt = null;
+    prompt.classList.add('hidden');
+  });
+
+  close.addEventListener('click', () => {
+    prompt.classList.add('hidden');
+    try { localStorage.setItem('ecm_install_dismissed', '1'); } catch {}
+  });
+
+  window.addEventListener('appinstalled', () => { prompt.classList.add('hidden'); showToast('E-CM installée !'); });
+};
+</script>
+
+</body>
+</html>
